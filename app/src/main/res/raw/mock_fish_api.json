@@ -1,0 +1,34 @@
+[
+  {
+    "Species Name": "Golden Fish",
+    "Scientific Name": "Carassius auratus",
+    "Calories": "120",
+    "Fat, Total": "5.0",
+    "Protein": "18.0",
+    "Image Gallery": [
+      {
+        "src": "https://www.thesprucepets.com/thmb/wG_TRuYzYTm6HzKGH4Gc-XMV088=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/GettyImages-1225367815-b3f1bf886bdc48be903292aa9b93fd94.jpg",
+        "alt": "Golden Fish"
+      }
+    ],
+    "Habitat": "Freshwater ponds",
+    "Biology": "Popular aquarium fish",
+    "Location": "Worldwide"
+  },
+  {
+    "Species Name": "Clownfish",
+    "Scientific Name": "Amphiprioninae",
+    "Calories": "90",
+    "Fat, Total": "3.5",
+    "Protein": "16.0",
+    "Image Gallery": [
+      {
+        "src": "https://www.atlasaquarium.com.au/assets/full/54.jpg?20200704031420",
+        "alt": "Clownfish"
+      }
+    ],
+    "Habitat": "Coral reefs",
+    "Biology": "Forms symbiotic relationships with sea anemones",
+    "Location": "Pacific Ocean"
+  }
+]
