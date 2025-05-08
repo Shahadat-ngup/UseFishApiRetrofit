@@ -8,31 +8,57 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class FilterType {
+    ALL, SMALL, LARGE;
+
+    fun displayName(): String = when(this) {
+        ALL -> "All Fish"
+        SMALL -> "Small Fish (<10cm)"
+        LARGE -> "Large Fish (≥10cm)"
+    }
+}
+
+
+data class FishUiState(
+    val fishList: List<Fish> = emptyList(),
+    val filteredFishList: List<Fish> = emptyList(),
+    val comments: List<Comment> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val searchQuery: String = "",
+    val currentFilter: FilterType = FilterType.ALL
+)
+
 class FishViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(FishUiState())
     val uiState: StateFlow<FishUiState> = _uiState.asStateFlow()
 
+    private var allFish: List<Fish> = emptyList()
+    private var allComments: List<Comment> = emptyList()
+
     init {
-        loadFish()
+        loadData()
     }
 
-    private fun loadFish() {
+    private fun loadData() {
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true) }
-                val fishList = ApiClient.instance.getAllFish()
+                allFish = ApiClient.instance.getAllFish()
+                allComments = ApiClient.instance.getAllComments()
+
                 _uiState.update {
                     it.copy(
-                        fishList = fishList,
-                        filteredFishList = fishList,
-                        isLoading = false,
-                        errorMessage = null
+                        fishList = allFish,
+                        filteredFishList = allFish,
+                        comments = allComments,
+                        isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = e.message ?: "Failed to load fish",
+                        errorMessage = e.message ?: "Failed to load data",
                         isLoading = false
                     )
                 }
@@ -43,9 +69,9 @@ class FishViewModel : ViewModel() {
     fun searchFish(query: String) {
         _uiState.update { currentState ->
             val filteredList = if (query.isBlank()) {
-                currentState.fishList
+                allFish
             } else {
-                currentState.fishList.filter { fish ->
+                allFish.filter { fish ->
                     fish.title.contains(query, ignoreCase = true)
                 }
             }
@@ -59,13 +85,9 @@ class FishViewModel : ViewModel() {
     fun filterFish(filterType: FilterType) {
         _uiState.update { currentState ->
             val filteredList = when (filterType) {
-                FilterType.ALL -> currentState.fishList
-                FilterType.SMALL -> currentState.fishList.filter { fish ->
-                    fish.title.length <= 5
-                }
-                FilterType.LARGE -> currentState.fishList.filter { fish ->
-                    fish.title.length > 5
-                }
+                FilterType.ALL -> allFish
+                FilterType.SMALL -> allFish.filter { it.sizeCm < 10 }
+                FilterType.LARGE -> allFish.filter { it.sizeCm >= 10 }
             }
             currentState.copy(
                 currentFilter = filterType,
@@ -74,21 +96,11 @@ class FishViewModel : ViewModel() {
         }
     }
 
-    // Add this function to reset error message
+    fun getCommentsForFish(fishId: Int): List<Comment> {
+        return allComments.filter { it.fishId == fishId }
+    }
+
     fun resetErrorMessage() {
         _uiState.update { it.copy(errorMessage = null) }
     }
-}
-
-data class FishUiState(
-    val fishList: List<Fish> = emptyList(),
-    val filteredFishList: List<Fish> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val searchQuery: String = "",
-    val currentFilter: FilterType = FilterType.ALL
-)
-
-enum class FilterType {
-    ALL, SMALL, LARGE
 }
