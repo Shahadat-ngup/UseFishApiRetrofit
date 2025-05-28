@@ -1,12 +1,8 @@
 package com.example.fishapi
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import android.util.Log
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
@@ -19,15 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun FishScreen() {
+fun FishScreen(navController: NavController) {
     val viewModel: FishViewModel = viewModel()
     val uiState = viewModel.uiState.collectAsState().value
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.errorMessage) {
+        Log.d("FishScreen", "Fish count: ${uiState.filteredFishList.size}")
         uiState.errorMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.resetErrorMessage()
@@ -35,52 +33,57 @@ fun FishScreen() {
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        val commentMap = uiState.comments.groupBy { it.fishId }
-
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(paddingValues)
         ) {
-            item {
-                SearchBar(
-                    query = uiState.searchQuery,
-                    onQueryChange = { viewModel.searchFish(it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-            }
-
-            item {
-                FilterChips(
-                    currentFilter = uiState.currentFilter,
-                    onFilterSelected = { viewModel.filterFish(it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-            }
-
-            if (uiState.isLoading) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 item {
-                    LoadingIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp)
-                    )
-                }
-            } else {
-                items(uiState.filteredFishList) { fish ->
-                    FishCard(
-                        fish = fish,
-                        comments = commentMap[fish.id] ?: emptyList(),
+                    SearchBar(
+                        query = uiState.searchQuery,
+                        onQueryChange = { viewModel.searchFish(it) },
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+
+                item {
+                    FilterChips(
+                        currentFilter = uiState.currentFilter,
+                        onFilterSelected = { viewModel.filterFish(it) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                if (uiState.isLoading) {
+                    item {
+                        LoadingIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp)
+                        )
+                    }
+                } else {
+                    items(uiState.filteredFishList) { fish ->
+                        val commentMap = uiState.comments.groupBy { it.fishId }
+                        FishCard(
+                            fish = fish,
+                            comments = commentMap[fish.id] ?: emptyList(),
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                navController.navigate("fishDetail/${fish.id}")
+                            }
+                        )
+                    }
                 }
             }
         }

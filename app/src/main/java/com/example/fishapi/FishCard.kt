@@ -14,27 +14,39 @@ import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FishCard(fish: Fish, comments: List<Comment>, modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(false) }
-
+fun FishCard(
+    fish: Fish,
+    comments: List<Comment>,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .clickable { onClick() }
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        onClick = { expanded = !expanded }
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column {
-            Image(
-                painter = rememberAsyncImagePainter(fish.imageUrl),
-                contentDescription = fish.title,
-                contentScale = ContentScale.Crop,
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .aspectRatio(16f / 9f) // Better than fixed height
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-            )
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(fish.imageUrl),
+                    contentDescription = fish.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
                 Text(
                     text = fish.title,
                     style = MaterialTheme.typography.titleMedium
@@ -45,36 +57,6 @@ fun FishCard(fish: Fish, comments: List<Comment>, modifier: Modifier = Modifier)
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-
-                if (expanded) {
-                    Column(modifier = Modifier.padding(top = 8.dp)) {
-                        if (comments.isNotEmpty()) {
-                            Text(
-                                text = "Comments (${comments.size}):",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            comments.take(2).forEach { comment ->
-                                Text(
-                                    text = "• ${comment.body}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                            if (comments.size > 2) {
-                                Text(
-                                    text = "+ ${comments.size - 2} more",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                        } else {
-                            Text(
-                                text = "No comments yet",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
             }
         }
     }
